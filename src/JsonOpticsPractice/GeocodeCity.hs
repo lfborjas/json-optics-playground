@@ -10,6 +10,7 @@ import GHC.Generics (Generic)
 import Data.List (intercalate, sortOn)
 import Data.Ord
 import Data.Maybe (fromMaybe)
+import Control.Monad.Reader
 
 data GeocodeCity = GeocodeCity
   {
@@ -37,6 +38,7 @@ test = "[{\"country\":\"Germany\",\"latitude\":50.11552,\"name\":\"Frankfurt am 
 decoded :: Maybe [GeocodeCity]
 decoded = decode test
 
+-- | Get a "display-worth" string from each result
 -- >>> allNames
 -- ["Frankfurt am Main, Regierungsbezirk Darmstadt, Hesse","Frankfurt (Oder), Brandenburg","Frankenberg, Saxony","Bad Frankenhausen, Thuringia"]
 allNames :: [String]
@@ -46,5 +48,19 @@ allNames =
   & map display
   where
     countrySelector =  #country % only "Germany"
-    display GeocodeCity{name,district,region} =
-      mconcat [name <> ", " , maybe "" (<>", ") district, region]
+    
+display :: GeocodeCity -> String
+display GeocodeCity{name,district,region} =
+  mconcat [name <> ", " , maybe "" (<>", ") district, region]
+
+-- | Produce tuples of display + population + country
+-- >>> flip runReader decoded triples
+-- [("Frankfurt am Main, Regierungsbezirk Darmstadt, Hesse","Germany",650000),("Frankfurt (Oder), Brandenburg","Germany",51691),("Bad Frankenhausen, Thuringia","Germany",8824),("Frankenberg, Saxony","Germany",16850)]
+triples :: Reader (Maybe [GeocodeCity]) [(String, String, Integer)]
+triples = do
+  magnifyMany (_Just % folded % filteredBy (#country % only "Germany")) $ do
+    geo <- ask
+    --cnt <- view #country
+    --pop <- view #population
+    pure [(display geo, geo ^. #country, geo ^. #population)]
+    
