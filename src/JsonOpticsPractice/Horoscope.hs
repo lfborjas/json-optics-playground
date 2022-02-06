@@ -11,8 +11,35 @@ import Data.Aeson.Types (parseMaybe)
 import Control.Monad.Reader
 import Control.Monad.State
 import Data.Aeson.QQ.Simple
-import Data.Aeson.Optics ()
+import Data.Aeson.Optics 
+import Text.Read (readMaybe)
+import qualified Data.Text as T
 
+data Planet
+  = Sun
+  | Moon
+  | Mercury
+  | Venus
+  | Mars
+  | Jupiter
+  | Saturn
+  | Uranus
+  | Neptune
+  | Pluto
+  | MeanNode
+  | TrueNode
+  | MeanApog
+  | OscuApog
+  | Earth
+  | Chiron
+  deriving (Show, Read)
+
+instance FromJSON Planet where
+  parseJSON = withText "Planet" $ \s -> 
+    case readMaybe (T.unpack s) of
+      Nothing -> fail "Invalid Planet"
+      Just p -> pure p
+      
 data SpeedData = SpeedData
   { unSplit :: Double }
   deriving (Show, Generic, FromJSON)
@@ -26,7 +53,7 @@ data HouseData = HouseData
   deriving (Show, Generic, FromJSON)
 
 data PlanetPosition = PlanetPosition
-  { planet :: String
+  { planet :: Planet
   , speed :: SpeedData
   , longitude :: LongitudeData
   , houseNumber :: HouseData
@@ -51,8 +78,8 @@ inSign signName = _Just % #planetPositions % folded % filteredBy (#longitude % #
 
 -- | return a tuple of planets and their house labels
 -- >>> flip runReader dataDecoded inHouses
--- [("Sun","IC"),("Moon","III"),("Saturn","III"),("Uranus","III"),("Neptune","III")]
-inHouses :: Reader (Maybe Horoscope) [(String, String)]
+-- [(Sun,"IC"),(Moon,"III"),(Saturn,"III"),(Uranus,"III"),(Neptune,"III")]
+inHouses :: Reader (Maybe Horoscope) [(Planet, String)]
 inHouses = do
   magnifyMany (inSign "Capricorn") $ do
     pos <- ask
@@ -61,8 +88,8 @@ inHouses = do
 -- Same as 'inHouses', but using @gview@ to approximate the examples from:
 -- https://chrispenner.ca/posts/traversal-systems  
 -- >>> flip runReader dataDecoded inHouses2
--- [("Sun","IC"),("Moon","III"),("Saturn","III"),("Uranus","III"),("Neptune","III")]
-inHouses2 :: Reader (Maybe Horoscope) [(String, String)]
+-- [(Sun,"IC"),(Moon,"III"),(Saturn,"III"),(Uranus,"III"),(Neptune,"III")]
+inHouses2 :: Reader (Maybe Horoscope) [(Planet, String)]
 inHouses2 = do
   magnifyMany (inSign "Capricorn") $ do
     pl <- gview #planet
@@ -83,7 +110,6 @@ makeRetrograde = do
 madeRetrograde :: [Double]
 madeRetrograde = execState makeRetrograde dataDecoded ^.. _Just % #planetPositions % folded % #speed % #unSplit
 
--- | From: http://www.lfborjas.com/astral-arcanum-demo/
 testData :: Value
 testData = [aesonQQ|
 {
@@ -223,7 +249,7 @@ testData = [aesonQQ|
           }
         },
         {
-          "planet": "Lilith",
+          "planet": "OscuApog",
           "speed": {
             "unSplit": 0.11093337702602891
           },
