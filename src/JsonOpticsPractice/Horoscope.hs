@@ -112,8 +112,11 @@ setRetrograde d@SpeedData{unSplit} =
 madeRetrograde2 :: [Double]
 madeRetrograde2 = 
   dataDecoded 
-  & _Just % #planetPositions % traversed % #speed %~ setRetrograde
-  & toListOf (_Just % #planetPositions % folded % #speed % #unSplit)
+  & speedOpt %~ setRetrograde
+  & toListOf (speedOpt % #unSplit)
+  where
+    speedOpt :: Traversal' (Maybe Horoscope) SpeedData
+    speedOpt = _Just % #planetPositions % traversed % #speed
 -- >>> madeRetrograde
 -- [-1.0196359986110741,-13.947422051450813,-1.1903897069829164,-1.251451014550458,-0.5273338733007417,-4.477182214727865e-2,-0.11711016716347317,-5.89714837583241e-2,-3.7757418150684646e-2,-2.328425047258476e-2,-5.2901520421361925e-2,-0.11093337702602891,-6.345430815724024e-2]
 madeRetrograde :: [Double]
