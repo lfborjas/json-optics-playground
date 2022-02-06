@@ -1,5 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE OverloadedLabels #-}
+{-# LANGUAGE DeriveAnyClass #-}
 
 module JsonOpticsPractice.Horoscope where
 
@@ -14,21 +15,15 @@ import Data.Aeson.Optics ()
 
 data SpeedData = SpeedData
   { unSplit :: Double }
-  deriving (Show, Generic)
-
-instance FromJSON SpeedData
+  deriving (Show, Generic, FromJSON)
 
 data LongitudeData = LongitudeData
   { zodiacSign :: String }
-  deriving (Show, Generic)
-
-instance FromJSON LongitudeData
+  deriving (Show, Generic, FromJSON)
 
 data HouseData = HouseData
   { label :: String }
-  deriving (Show, Generic)
-
-instance FromJSON HouseData
+  deriving (Show, Generic, FromJSON)
 
 data PlanetPosition = PlanetPosition
   { planet :: String
@@ -36,15 +31,11 @@ data PlanetPosition = PlanetPosition
   , longitude :: LongitudeData
   , houseNumber :: HouseData
   }
-  deriving (Show, Generic)
-
-instance FromJSON PlanetPosition
+  deriving (Show, Generic, FromJSON)
 
 data Horoscope = Horoscope
   {planetPositions :: [PlanetPosition]}
-  deriving (Show, Generic)
-
-instance FromJSON Horoscope
+  deriving (Show, Generic, FromJSON)
 
 dataDecoded :: Maybe Horoscope
 dataDecoded =
