@@ -3,15 +3,14 @@
 
 module JsonOpticsPractice.Horoscope where
 
-import Text.RawString.QQ
 import Data.Aeson
-import qualified Data.ByteString.Lazy as BL
-import Data.Aeson.Optics
 import Optics
 import GHC.Generics (Generic)
 import Data.Aeson.Types (parseMaybe)
 import Control.Monad.Reader
 import Control.Monad.State
+import Data.Aeson.QQ.Simple
+import Data.Aeson.Optics ()
 
 data SpeedData = SpeedData
   { unSplit :: Double }
@@ -49,7 +48,9 @@ instance FromJSON Horoscope
 
 dataDecoded :: Maybe Horoscope
 dataDecoded =
-  fromJSONValue =<< (testData ^? key "data" % key "horoscope")
+  -- using the `Ixed Value` instance from aeson-optics.
+  -- note that `key` also works!
+  fromJSONValue =<< (testData ^? ix "data" % ix "horoscope")
   where
     fromJSONValue = parseMaybe parseJSON
 
@@ -92,8 +93,8 @@ madeRetrograde :: [Double]
 madeRetrograde = execState makeRetrograde dataDecoded ^.. _Just % #planetPositions % folded % #speed % #unSplit
 
 -- | From: http://www.lfborjas.com/astral-arcanum-demo/
-testData :: BL.ByteString
-testData = [r|
+testData :: Value
+testData = [aesonQQ|
 {
   "data": {
     "horoscope": {
