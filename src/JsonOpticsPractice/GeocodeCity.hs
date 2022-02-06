@@ -12,6 +12,9 @@ import Data.Ord
 import Data.Maybe (fromMaybe)
 import Control.Monad.Reader
 import Control.Monad.State
+import qualified Network.HTTP.Client.TLS as HTTP
+import qualified Network.HTTP.Client as HTTP
+import qualified Data.ByteString.Char8 as B
 
 data GeocodeCity = GeocodeCity
   {
@@ -76,3 +79,27 @@ displayAsName = do
     geo <- get
     when (geo ^. #country == "Germany") $ do
       put $ set #name (display geo) geo
+
+
+---
+
+makeGeoRequest :: String -> IO (Either String [GeocodeCity])
+makeGeoRequest search = do
+  let request = 
+        HTTP.parseRequest_ "https://api.geocode.city/autocomplete"
+        & HTTP.setQueryString [("q", Just . B.pack $ search)]
+  manager <- HTTP.getGlobalManager
+  response <- HTTP.httpLbs request manager
+  pure $ eitherDecode (HTTP.responseBody response)
+
+-- >>> displays "Frank" "Germany"
+-- Right ["Frankfurt am Main, Regierungsbezirk Darmstadt, Hesse","Frankfurt (Oder), Brandenburg","Bad Frankenhausen, Thuringia"]
+displays :: String -> String-> IO (Either String [String])
+displays search country = do
+  response <- makeGeoRequest search
+  case response of
+    Left e -> pure . Left $ e
+    Right cities -> 
+      pure . Right $ cities ^.. folded % filteredBy (#country % only country)
+        & sortOn (Down . population)
+        & map display
