@@ -59,6 +59,7 @@ library
       , http-types
       , mtl
       , raw-strings-qq
+      , transformers
       
       
 
