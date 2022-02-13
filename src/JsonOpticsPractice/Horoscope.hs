@@ -14,6 +14,9 @@ import Data.Aeson.QQ.Simple
 import Data.Aeson.Optics 
 import Text.Read (readMaybe)
 import qualified Data.Text as T
+import qualified Data.Map as M
+import Control.Monad.Trans.RWS hiding (ask)
+import Control.Monad.Identity
 
 data Planet
   = Sun
@@ -97,6 +100,25 @@ inHouses2 = do
       lbl <- gview #label
       return [(pl, lbl)]
 
+
+newtype AccumMap k v = AccumMap (M.Map k v)
+  deriving (Show)
+
+instance (Ord k, Monoid v) => Semigroup (AccumMap k v) where
+  AccumMap a <> AccumMap b= AccumMap $ M.unionWith (<>) a b
+  
+instance (Ord k, Monoid v) => Monoid (AccumMap k v) where
+  mempty = AccumMap mempty
+
+-- >>> runReader groupedInHouses dataDecoded
+-- AccumMap (fromList [("Desc",[Mars]),("IC",[Sun,Mercury]),("II",[Pluto]),("III",[Moon,Venus,Saturn,Uranus,Neptune]),("IX",[Chiron]),("V",[MeanNode]),("VIII",[Jupiter]),("XII",[OscuApog])])
+groupedInHouses :: Reader (Maybe Horoscope) (AccumMap String [Planet])
+groupedInHouses = do
+  magnifyMany (_Just % #planetPositions % folded) $ do
+    houseLbl <- gview (#houseNumber % #label)
+    pl <- gview #planet
+    pure . AccumMap $ M.fromList [(houseLbl, [pl])]
+    
 makeRetrograde :: State (Maybe Horoscope) ()
 makeRetrograde = do
   zoomMany (_Just % #planetPositions % traversed) $ do
