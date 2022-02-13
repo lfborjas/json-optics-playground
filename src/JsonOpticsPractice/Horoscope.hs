@@ -144,6 +144,14 @@ madeRetrograde2 =
 madeRetrograde :: [Double]
 madeRetrograde = execState makeRetrograde dataDecoded ^.. _Just % #planetPositions % folded % #speed % #unSplit
 
+
+-- snippet from:
+-- https://williamyaoh.com/posts/2019-04-25-lens-exercises.html
+-- >>> v1
+-- ["Sun","Moon","Mercury","Venus","Mars","Jupiter","Saturn","Uranus","Neptune","Pluto","MeanNode","OscuApog","Chiron"]
+v1 :: [T.Text]
+v1 = testData ^.. key "data" % key "horoscope" % key "planetPositions" % values % key "planet" % _String
+
 testData :: Value
 testData = [aesonQQ|
 {
