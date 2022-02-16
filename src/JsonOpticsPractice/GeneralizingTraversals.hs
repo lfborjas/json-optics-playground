@@ -73,6 +73,14 @@ owners =
     itoListOf (#staff % folded % reindexed employeeName (selfIndex % #employeePets % folded % #petName))
     & map (\(eName, pName) -> pName <> " belongs to " <> eName)
     -- 
+-- owners2 :: [String]
+-- owners2 =
+--   company ^.. 
+--     (#staff % folded % reindexed employeeName selfIndex % #employeePets % folded % #petName
+--     % x
+--     % to (\(eName, pName) -> pName <> " belongs to " <> eName))
+    -- 
+
 
 -- EX. 2.1: keeping references, the monadic way
 -- NOTE(luis) this is _almost_ like the example, except that we
