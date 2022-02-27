@@ -73,6 +73,13 @@ owners =
     itoListOf (#staff % folded % reindexed employeeName (selfIndex % #employeePets % folded % #petName))
     & map (\(eName, pName) -> pName <> " belongs to " <> eName)
     -- 
+
+-- >>> ownersIdx
+-- ["Rocky","Bullwinkle","Inigo"]
+ownersIdx :: [String]
+ownersIdx = company ^.. #staff % folded % reindexed employeeName selfIndex % #employeePets % folded % #petName
+--     % x
+--     % to (\(eName, pName) -> pName <> " belongs to " <> eName
 -- owners2 :: [String]
 -- owners2 =
 --   company ^.. 

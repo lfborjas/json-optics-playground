@@ -52,12 +52,17 @@ ex1 =
 owners :: [String]
 owners =
   company ^..
-    (staff . folded . reindexed _employeeName selfIndex <. employeePets . folded . petName)
+    (x)
     -- _ :: ((String, String) -> Const (Endo [String]) (String, String))
     --  -> Indexed String String (Const (Endo [String]) String)
     . withIndex
     . to (\(eName, pName) -> pName <> " belongs to " <> eName)
-
+  where
+    x = staff . folded . reindexed _employeeName selfIndex <. employeePets . folded . petName
+    
+-- >>> ownersIdx
+-- [Employee {_employeeId = 1, _employeeName = "bob", _employeePets = [Pet {_petName = "Rocky", _petType = "cat"},Pet {_petName = "Bullwinkle", _petType = "dog"}]},Employee {_employeeId = 2, _employeeName = "sally", _employeePets = [Pet {_petName = "Inigo", _petType = "cat"}]}]
+ownersIdx = company ^.. staff . folded . reindexed _employeeName selfIndex <. employeePets . folded . petName
 -- EX. 2.1
 -- >>> runReader owners' company
 -- ["Rocky belongs to bob","Bullwinkle belongs to bob","Inigo belongs to sally"]
